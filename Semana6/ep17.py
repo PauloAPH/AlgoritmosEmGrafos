@@ -111,15 +111,29 @@ def weight_edge(adj, i, j):
             return weigth
     return -1
 
-def change_weigth(adj, i, j, weigth):
+def change_weigth(l_adj, i, j, weigth):
     """
     Altera o peso da aresta entre i e j, no grafo adj.
     """
-    v = adj[i]
+    v = l_adj[i]
     for k in range(len(v)):
         a, peso = v[k]
         if a == j:
-            adj[i][k] = (j, weigth)
+            if weigth == 0:
+                l_adj[i].remove((a, peso))
+            else:
+                l_adj[i][k] = (j, weigth)
+            return
+
+def copy_list_adj(l_adj):
+    """
+    Retorna uma copia da lista de adj
+    """
+    l = len(l_adj)
+    new_l_adj = [[] for _ in range(l)]
+    for i in range(l):
+        new_l_adj[i] = l_adj[i].copy()
+    return new_l_adj
 
 
 def caminho_aumentante(adj, s, t):
@@ -138,12 +152,14 @@ def caminho_aumentante(adj, s, t):
     pai = bfs_pais[filho]
     cam_aumentante = []
     capacidade = weight_edge(adj, pai, filho)
+
     while pai != -1:
         peso = weight_edge(adj, pai, filho)
         cam_aumentante.insert(0, [pai, filho, weight_edge(adj, pai, filho)])
         filho = pai
         pai = bfs_pais[filho]
-        capacidade = min(capacidade, peso)
+        if peso < capacidade:
+            capacidade = peso
     return cam_aumentante, capacidade
 
 def aumenta_fluxo(adj, cam_aumentante, fluxo, capacidade):
@@ -169,8 +185,8 @@ def aumenta_fluxo(adj, cam_aumentante, fluxo, capacidade):
         else:
             fluxo[i][j] -= capacidade
     matriz_adj_residual = list_to_matrix(adj)
-
-    residual = adj.copy()
+    
+    residual = copy_list_adj(adj)
 
     for i in range (n):
         for j in range (n):
@@ -190,13 +206,11 @@ def ford_fulkerson(adj, s, t):
     """
     n = len(adj)
     fluxo =  [[0 for col in range(n)] for row in range(n)]
-
     caminho_a, capacidade = caminho_aumentante(adj, s, t)
-
     while capacidade > 0:
-        print(capacidade)
-        fluxo, matrix_residual, residual = aumenta_fluxo(adj, caminho_a, fluxo, capacidade)
+        fluxo, matrix_residual, residual = aumenta_fluxo(adj, caminho_a, fluxo, capacidade)   
         caminho_a, capacidade = caminho_aumentante(residual, s, t)
+
     return fluxo, matrix_residual
 
 
